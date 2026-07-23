@@ -21,6 +21,8 @@ enum A11yID {
     static let recordOnlyToggle = "recordOnlyToggle"
     static let recordOnlyBanner = "recordOnlyBanner"
     static let recordAppHotkeyToggle = "recordAppHotkeyToggle"
+    static let recordAppHotkeyRecorder = "recordAppHotkeyRecorder"
+    static let recordAppHotkeyReset = "recordAppHotkeyReset"
     static let transcriptionSection = "transcriptionSection"
     static let protocolSection = "protocolSection"
     static let outputFolderSection = "outputFolderSection"

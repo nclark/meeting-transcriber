@@ -18,13 +18,28 @@ struct GeneralSettingsView: View {
 
             Section("Global Hotkey") {
                 Toggle(
-                    "Open \"Record App\" window (\(GlobalHotKey.recordAppDisplayString))",
+                    "Open \"Record App\" window",
                     isOn: $settings.recordAppHotkeyEnabled,
                 )
                 .accessibilityIdentifier(A11yID.recordAppHotkeyToggle)
-                Text("Works system-wide while the app is running. No extra permissions needed.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if settings.recordAppHotkeyEnabled {
+                    HStack {
+                        Text("Shortcut")
+                        Spacer()
+                        ShortcutRecorderView(combo: $settings.recordAppHotkeyCombo) { armed in
+                            settings.hotkeyCaptureActive = armed
+                        }
+                        .accessibilityIdentifier(A11yID.recordAppHotkeyRecorder)
+                        Button("Reset") {
+                            settings.recordAppHotkeyCombo = .recordAppDefault
+                        }
+                        .disabled(settings.recordAppHotkeyCombo == .recordAppDefault)
+                        .accessibilityIdentifier(A11yID.recordAppHotkeyReset)
+                    }
+                    Text("Must include ⌘, ⌃, or ⌥. Works system-wide while Meeting Transcriber is running.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Section("Apps to Watch") {

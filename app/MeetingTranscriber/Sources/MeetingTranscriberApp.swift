@@ -163,17 +163,20 @@ struct MeetingTranscriberApp: App {
                 ) else { return }
                 bringWindowToFront(id: "record-app")
             }
-            .onChange(of: appState.settings.recordAppHotkeyEnabled, initial: true) { _, enabled in
-                if enabled, recordAppHotKey == nil {
+            .onChange(of: appState.settings.recordAppHotkeyState, initial: true) { _, state in
+                // Tear down + re-register on any change: enable/disable,
+                // rebinding via the recorder, or capture suspension (the
+                // recorder must see the current combo, which a live Carbon
+                // registration would consume first).
+                recordAppHotKey?.unregister()
+                recordAppHotKey = nil
+                if state.enabled, !state.captureSuspended {
                     recordAppHotKey = GlobalHotKey(
-                        keyCode: GlobalHotKey.recordAppKeyCode,
-                        modifiers: GlobalHotKey.recordAppModifiers,
+                        keyCode: state.combo.keyCode,
+                        modifiers: state.combo.carbonModifiers,
                     ) {
                         NotificationCenter.default.post(name: .showRecordApp, object: nil)
                     }
-                } else if !enabled {
-                    recordAppHotKey?.unregister()
-                    recordAppHotKey = nil
                 }
             }
             .task {

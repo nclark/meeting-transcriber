@@ -17,14 +17,6 @@ private let logger = Logger(subsystem: AppPaths.logSubsystem, category: "GlobalH
 /// delivers hot-key events on the main thread.
 @MainActor
 final class GlobalHotKey {
-    /// Default shortcut for the "Record App" window: ⌃⌥⌘R — mirrors the
-    /// menu bar item's local `⌘R` with the full modifier stack that global
-    /// shortcuts conventionally carry to avoid shadowing app-local bindings.
-    static let recordAppKeyCode = UInt32(kVK_ANSI_R)
-    static let recordAppModifiers = UInt32(controlKey | optionKey | cmdKey)
-    /// Human-readable form of the default shortcut, shown in Settings.
-    static let recordAppDisplayString = "⌃⌥⌘R"
-
     // nonisolated(unsafe): `deinit` (nonisolated) must be able to release the
     // Carbon handles so a dropped reference never leaves Carbon holding a
     // dangling userData pointer. All accesses in practice run on the main

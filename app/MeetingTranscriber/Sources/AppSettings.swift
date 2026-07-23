@@ -188,12 +188,31 @@ final class AppSettings {
 
     // MARK: - Hotkeys
 
-    /// Registers the system-wide ⌃⌥⌘R shortcut that opens the "Record App"
+    /// Registers the system-wide shortcut that opens the "Record App"
     /// window from any app (Carbon hot key — no TCC grant needed). Off by
     /// default so the app never shadows another app's shortcut unasked.
     var recordAppHotkeyEnabled: Bool {
         didSet { defaults.set(recordAppHotkeyEnabled, forKey: "recordAppHotkeyEnabled") }
     }
+
+    /// Key code of the Record-App shortcut (default: R).
+    var recordAppHotkeyKeyCode: Int {
+        didSet { defaults.set(recordAppHotkeyKeyCode, forKey: "recordAppHotkeyKeyCode") }
+    }
+
+    /// Carbon modifier mask of the Record-App shortcut (default: ⌃⌥⌘).
+    var recordAppHotkeyModifiers: Int {
+        didSet { defaults.set(recordAppHotkeyModifiers, forKey: "recordAppHotkeyModifiers") }
+    }
+
+    /// Transient (not persisted): true while the shortcut recorder is
+    /// armed. The scene suspends the live Carbon registration during
+    /// capture — a registered hot key is consumed before the app's local
+    /// key monitor sees it, so the current combo could not be re-recorded.
+    var hotkeyCaptureActive = false
+
+    // Derived hotkey API (recordAppHotkeyCombo, recordAppHotkeyState)
+    // lives in AppSettings+Hotkeys.swift (line-cap split).
 
     // MARK: - Transcription
 
@@ -488,7 +507,7 @@ final class AppSettings {
         perChannelIndicatorEnabled = defaults.object(forKey: "perChannelIndicatorEnabled") as? Bool ?? true
         liveTranscriptionEnabled = defaults.object(forKey: "liveTranscriptionEnabled") as? Bool ?? false
         asymmetricSilenceWarningSeconds = max(30, min(300, defaults.object(forKey: "asymmetricSilenceWarningSeconds") as? Double ?? 90))
-        recordAppHotkeyEnabled = defaults.object(forKey: "recordAppHotkeyEnabled") as? Bool ?? false
+        (recordAppHotkeyEnabled, recordAppHotkeyKeyCode, recordAppHotkeyModifiers) = Self.loadHotkeySettings(from: defaults)
 
         transcriptionEngine = (defaults.string(forKey: "transcriptionEngine")
             .flatMap(TranscriptionEngineSetting.init(rawValue:))) ?? .whisperKit

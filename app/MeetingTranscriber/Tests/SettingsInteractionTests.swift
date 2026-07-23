@@ -85,6 +85,20 @@ final class SettingsInteractionTests: XCTestCase {
         XCTAssertTrue(settings.recordAppHotkeyEnabled, "tapping the toggle must enable the hotkey setting")
     }
 
+    func testRecordAppHotkeyResetRestoresDefaultCombo() throws {
+        let settings = makeSettings()
+        settings.recordAppHotkeyEnabled = true
+        settings.recordAppHotkeyCombo = HotKeyCombo(keyCode: 46, carbonModifiers: 256) // ⌘M
+        let view = GeneralSettingsView(settings: settings, updateChecker: nil)
+
+        let reset = try view.inspect().find(ViewType.Button.self) { button in
+            try button.accessibilityIdentifier() == A11yID.recordAppHotkeyReset
+        }
+        try reset.tap()
+
+        XCTAssertEqual(settings.recordAppHotkeyCombo, .recordAppDefault, "Reset must restore the default shortcut")
+    }
+
     // MARK: - Stepper write-back
 
     func testPollIntervalStepperIncrementsSetting() throws {
