@@ -4,6 +4,11 @@ import SwiftUI
 struct GeneralSettingsView: View {
     @Bindable var settings: AppSettings
     var updateChecker: UpdateChecker?
+    /// Feeds the quick-record "Default app" picker. Injectable for tests;
+    /// production uses the same provider as the Record App window.
+    var appsProvider: any RunningAppsProvider = SystemRunningAppsProvider()
+
+    @State private var runningApps: [RunningApp] = []
 
     var body: some View {
         // swiftlint:disable:next closure_body_length
@@ -17,32 +22,7 @@ struct GeneralSettingsView: View {
             }
 
             Section("Global Hotkey") {
-                HStack {
-                    Toggle(
-                        "Open \"Record App\" window",
-                        isOn: $settings.recordAppHotkeyEnabled,
-                    )
-                    .accessibilityIdentifier(A11yID.recordAppHotkeyToggle)
-                    Spacer()
-                    if settings.recordAppHotkeyEnabled {
-                        Text("Shortcut")
-                            .foregroundStyle(.secondary)
-                        ShortcutRecorderView(combo: $settings.recordAppHotkeyCombo) { armed in
-                            settings.hotkeyCaptureActive = armed
-                        }
-                        .accessibilityIdentifier(A11yID.recordAppHotkeyRecorder)
-                        Button("Reset") {
-                            settings.recordAppHotkeyCombo = .recordAppDefault
-                        }
-                        .disabled(settings.recordAppHotkeyCombo == .recordAppDefault)
-                        .accessibilityIdentifier(A11yID.recordAppHotkeyReset)
-                    }
-                }
-                if settings.recordAppHotkeyEnabled {
-                    Text("Must include ⌘, ⌃, or ⌥. Works system-wide while Meeting Transcriber is running.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                globalHotkeyRows
             }
 
             Section("Apps to Watch") {
@@ -80,6 +60,78 @@ struct GeneralSettingsView: View {
             }
         }
         .formStyle(.grouped)
+    }
+
+    @ViewBuilder private var globalHotkeyRows: some View {
+        HStack {
+            Toggle(
+                "Open \"Record App\" window",
+                isOn: $settings.recordAppHotkeyEnabled,
+            )
+            .accessibilityIdentifier(A11yID.recordAppHotkeyToggle)
+            Spacer()
+            if settings.recordAppHotkeyEnabled {
+                Text("Shortcut")
+                    .foregroundStyle(.secondary)
+                ShortcutRecorderView(combo: $settings.recordAppHotkeyCombo) { armed in
+                    settings.hotkeyCaptureActive = armed
+                }
+                .accessibilityIdentifier(A11yID.recordAppHotkeyRecorder)
+                Button("Reset") {
+                    settings.recordAppHotkeyCombo = .recordAppDefault
+                }
+                .disabled(settings.recordAppHotkeyCombo == .recordAppDefault)
+                .accessibilityIdentifier(A11yID.recordAppHotkeyReset)
+            }
+        }
+        if settings.recordAppHotkeyEnabled {
+            defaultAppRow
+            Text(
+                "Must include ⌘, ⌃, or ⌥. Works system-wide while Meeting Transcriber is running. " +
+                    "With a default app set, the shortcut starts recording it immediately " +
+                    "instead of opening the window.",
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+    }
+
+    /// Indented sub-row of the hotkey toggle: which app the shortcut records
+    /// without showing the picker. The stored default stays selectable even
+    /// while its app isn't running (extra "(not running)" entry), so opening
+    /// this menu never silently drops the saved choice.
+    private var defaultAppRow: some View {
+        Picker(selection: defaultAppSelection) {
+            Text("None — ask every time").tag("")
+            if !settings.quickRecordBundleID.isEmpty,
+               !runningApps.contains(where: { $0.bundleIdentifier == settings.quickRecordBundleID }) {
+                Text("\(settings.quickRecordAppName) (not running)")
+                    .tag(settings.quickRecordBundleID)
+            }
+            ForEach(runningApps.filter { $0.bundleIdentifier != nil }) { app in
+                Text(app.name).tag(app.bundleIdentifier ?? "")
+            }
+        } label: {
+            Text("Default app")
+                .padding(.leading, 20)
+        }
+        .onAppear {
+            runningApps = appsProvider.runningApps()
+        }
+    }
+
+    /// Writes the display name alongside the bundle ID so the "(not
+    /// running)" entry can render after relaunch.
+    private var defaultAppSelection: Binding<String> {
+        Binding(
+            get: { settings.quickRecordBundleID },
+            set: { newID in
+                settings.quickRecordBundleID = newID
+                settings.quickRecordAppName = newID.isEmpty
+                    ? ""
+                    : runningApps.first { $0.bundleIdentifier == newID }?.name ?? settings.quickRecordAppName
+            },
+        )
     }
 
     private var recordOnlyBanner: some View {

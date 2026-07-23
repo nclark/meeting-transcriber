@@ -17,6 +17,7 @@ app/MeetingTranscriber/    # Swift macOS menu bar app (SPM)
     GlobalHotKey.swift     # Carbon RegisterEventHotKey wrapper for the system-wide Record-App shortcut (fires while other apps have focus; no TCC grant)
     HotKeyCombo.swift      # Pure shortcut value type (keyCode + Carbon modifiers): validation, NSEvent→Carbon conversion, layout-aware display string
     ShortcutRecorderView.swift # Click-to-record shortcut field (local key monitor; owner suspends live registration during capture via onArmedChange)
+    QuickRecordResolver.swift  # Pure decision logic for the Record-App shortcut (default app set + running → record immediately, else show picker)
     ChannelHealthMonitor.swift  # Pure state machine for per-channel asymmetric silence detection (mic vs app audio)
     ChannelHealthController.swift  # @Observable controller polling channel levels and driving ChannelHealthMonitor
     SettingsView.swift     # Settings window (TabView shell hosting six sub-views in Settings/)
@@ -46,6 +47,7 @@ app/MeetingTranscriber/    # Swift macOS menu bar app (SPM)
     AppPaths.swift         # Centralized paths (ipcDir, dataDir, logSubsystem, speakersDB)
     AppSettings.swift      # @Observable settings (UserDefaults + file-based secrets)
     AppSettings+Hotkeys.swift # Derived Record-App hotkey API (combo + registration state for the scene's single onChange) (line-cap split)
+    ProtocolProvider.swift # LLM provider enum, moved out of AppSettings.swift (line-cap split)
     AXHelper.swift         # Shared accessibility API helper
     A11yID.swift           # Single source of truth for accessibility identifiers used as automation handles (ViewInspector find + /ui/press allowlist reference the constants → compiler catches drift)
     NotificationManager.swift # macOS notifications

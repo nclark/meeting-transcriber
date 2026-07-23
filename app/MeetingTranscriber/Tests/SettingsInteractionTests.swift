@@ -8,6 +8,14 @@ import XCTest
 /// captions TimelineView had zero coverage. Each control is driven and the
 /// resulting `AppSettings` write-back (or rendered identifier) is asserted, so a
 /// broken binding — not just a missing control — fails the test.
+private struct StubRunningAppsProvider: RunningAppsProvider {
+    let apps: [RunningApp]
+
+    func runningApps() -> [RunningApp] {
+        apps
+    }
+}
+
 @MainActor
 final class SettingsInteractionTests: XCTestCase {
     // swiftlint:disable:next implicitly_unwrapped_optional
@@ -97,6 +105,27 @@ final class SettingsInteractionTests: XCTestCase {
         try reset.tap()
 
         XCTAssertEqual(settings.recordAppHotkeyCombo, .recordAppDefault, "Reset must restore the default shortcut")
+    }
+
+    func testQuickRecordDefaultAppPickerWritesBackToSettings() throws {
+        let settings = makeSettings()
+        settings.recordAppHotkeyEnabled = true
+        let view = GeneralSettingsView(
+            settings: settings,
+            updateChecker: nil,
+            appsProvider: StubRunningAppsProvider(apps: [
+                RunningApp(id: 42, name: "Slack", bundleIdentifier: "com.tinyspeck.slackmacgap", icon: nil),
+            ]),
+        )
+
+        // Picker: located by label — the sanctioned fallback (SwiftUI Picker
+        // exposes no ViewInspector-findable accessibilityIdentifier).
+        let picker = try view.inspect().find(ViewType.Picker.self) { picker in
+            try picker.labelView().text().string() == "Default app"
+        }
+        try picker.select(value: "com.tinyspeck.slackmacgap")
+
+        XCTAssertEqual(settings.quickRecordBundleID, "com.tinyspeck.slackmacgap")
     }
 
     // MARK: - Stepper write-back

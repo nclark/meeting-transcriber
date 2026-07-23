@@ -71,25 +71,7 @@ enum DiarizerMode: String, CaseIterable, Codable {
     }
 }
 
-enum ProtocolProvider: String, CaseIterable {
-    #if !APPSTORE
-        case claudeCLI
-    #endif
-    case openAICompatible
-    case none // swiftlint:disable:this discouraged_none_name
-
-    var label: String {
-        switch self {
-        #if !APPSTORE
-            case .claudeCLI: "Claude CLI"
-        #endif
-
-        case .openAICompatible: "OpenAI-Compatible API"
-
-        case .none: "None (Transcript Only)"
-        }
-    }
-}
+// ProtocolProvider lives in ProtocolProvider.swift (line-cap split).
 
 @Observable
 final class AppSettings {
@@ -203,6 +185,19 @@ final class AppSettings {
     /// Carbon modifier mask of the Record-App shortcut (default: ⌃⌥⌘).
     var recordAppHotkeyModifiers: Int {
         didSet { defaults.set(recordAppHotkeyModifiers, forKey: "recordAppHotkeyModifiers") }
+    }
+
+    /// Bundle ID of the app the Record-App shortcut records immediately,
+    /// skipping the picker window. Empty = no default (shortcut opens the
+    /// picker). Falls back to the picker when the app isn't running.
+    var quickRecordBundleID: String {
+        didSet { defaults.set(quickRecordBundleID, forKey: "quickRecordBundleID") }
+    }
+
+    /// Display name captured when the default was chosen, so Settings can
+    /// render the selection even while the app isn't running.
+    var quickRecordAppName: String {
+        didSet { defaults.set(quickRecordAppName, forKey: "quickRecordAppName") }
     }
 
     /// Transient (not persisted): true while the shortcut recorder is
@@ -507,7 +502,7 @@ final class AppSettings {
         perChannelIndicatorEnabled = defaults.object(forKey: "perChannelIndicatorEnabled") as? Bool ?? true
         liveTranscriptionEnabled = defaults.object(forKey: "liveTranscriptionEnabled") as? Bool ?? false
         asymmetricSilenceWarningSeconds = max(30, min(300, defaults.object(forKey: "asymmetricSilenceWarningSeconds") as? Double ?? 90))
-        (recordAppHotkeyEnabled, recordAppHotkeyKeyCode, recordAppHotkeyModifiers) = Self.loadHotkeySettings(from: defaults)
+        (recordAppHotkeyEnabled, recordAppHotkeyKeyCode, recordAppHotkeyModifiers, quickRecordBundleID, quickRecordAppName) = Self.loadHotkeys(from: defaults)
 
         transcriptionEngine = (defaults.string(forKey: "transcriptionEngine")
             .flatMap(TranscriptionEngineSetting.init(rawValue:))) ?? .whisperKit

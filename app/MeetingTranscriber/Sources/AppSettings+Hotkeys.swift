@@ -37,15 +37,20 @@ extension AppSettings {
         )
     }
 
-    /// Init-time read of the persisted hotkey settings, bundled so the
-    /// `AppSettings` init stays under the function-body-length cap.
-    static func loadHotkeySettings(from defaults: UserDefaults) -> (enabled: Bool, keyCode: Int, modifiers: Int) {
+    // Init-time read of all persisted hotkey settings in one go. A tuple
+    // (not a bag struct) so `AppSettings.init` can destructure it in a
+    // single statement — the init body sits at the function-body-length
+    // cap and has no line to spare for an intermediate `let`.
+    // swiftlint:disable:next large_tuple
+    static func loadHotkeys(from defaults: UserDefaults) -> (Bool, Int, Int, String, String) {
         (
-            enabled: defaults.object(forKey: "recordAppHotkeyEnabled") as? Bool ?? false,
-            keyCode: defaults.object(forKey: "recordAppHotkeyKeyCode") as? Int
+            defaults.object(forKey: "recordAppHotkeyEnabled") as? Bool ?? false,
+            defaults.object(forKey: "recordAppHotkeyKeyCode") as? Int
                 ?? Int(HotKeyCombo.recordAppDefault.keyCode),
-            modifiers: defaults.object(forKey: "recordAppHotkeyModifiers") as? Int
+            defaults.object(forKey: "recordAppHotkeyModifiers") as? Int
                 ?? Int(HotKeyCombo.recordAppDefault.carbonModifiers),
+            defaults.string(forKey: "quickRecordBundleID") ?? "",
+            defaults.string(forKey: "quickRecordAppName") ?? "",
         )
     }
 }

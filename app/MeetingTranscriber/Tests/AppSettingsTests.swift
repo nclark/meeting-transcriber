@@ -303,6 +303,20 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertTrue(defaults.bool(forKey: "recordAppHotkeyEnabled"))
     }
 
+    // MARK: - Quick-Record Default App
+
+    func test_quickRecordDefault_defaultsToEmpty() {
+        XCTAssertEqual(settings.quickRecordBundleID, "")
+        XCTAssertEqual(settings.quickRecordAppName, "")
+    }
+
+    func test_quickRecordDefault_persistsToUserDefaults() {
+        settings.quickRecordBundleID = "com.tinyspeck.slackmacgap"
+        settings.quickRecordAppName = "Slack"
+        XCTAssertEqual(defaults.string(forKey: "quickRecordBundleID"), "com.tinyspeck.slackmacgap")
+        XCTAssertEqual(defaults.string(forKey: "quickRecordAppName"), "Slack")
+    }
+
     // MARK: - Verbose Diagnostics (legacy audioDebugLogging migration)
 
     func test_verboseDiagnostics_defaultsToFalse() {

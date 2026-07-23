@@ -161,7 +161,16 @@ struct MeetingTranscriberApp: App {
                     isManualRecording: appState.isManualRecording,
                     state: appState.currentStatus?.state ?? .idle,
                 ) else { return }
-                bringWindowToFront(id: "record-app")
+                switch QuickRecordResolver.resolve(
+                    defaultBundleID: appState.settings.quickRecordBundleID,
+                    running: SystemRunningAppsProvider().runningApps(),
+                ) {
+                case let .record(pid, appName):
+                    appState.watching.startManualRecording(pid: pid, appName: appName, title: appName)
+
+                case .showPicker:
+                    bringWindowToFront(id: "record-app")
+                }
             }
             .onChange(of: appState.settings.recordAppHotkeyState, initial: true) { _, state in
                 // Tear down + re-register on any change: enable/disable,
