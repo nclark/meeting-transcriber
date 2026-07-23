@@ -105,11 +105,15 @@ struct GeneralSettingsView: View {
             Text("None — ask every time").tag("")
             if !settings.quickRecordBundleID.isEmpty,
                !runningApps.contains(where: { $0.bundleIdentifier == settings.quickRecordBundleID }) {
-                Text("\(settings.quickRecordAppName) (not running)")
-                    .tag(settings.quickRecordBundleID)
+                appMenuItem(
+                    name: "\(settings.quickRecordAppName) (not running)",
+                    icon: Self.installedAppIcon(bundleID: settings.quickRecordBundleID),
+                )
+                .tag(settings.quickRecordBundleID)
             }
             ForEach(runningApps.filter { $0.bundleIdentifier != nil }) { app in
-                Text(app.name).tag(app.bundleIdentifier ?? "")
+                appMenuItem(name: app.name, icon: app.icon)
+                    .tag(app.bundleIdentifier ?? "")
             }
         } label: {
             Text("Default app")
@@ -118,6 +122,26 @@ struct GeneralSettingsView: View {
         .onAppear {
             runningApps = appsProvider.runningApps()
         }
+    }
+
+    /// Menu row mirroring the Record App window's icon + name layout.
+    private func appMenuItem(name: String, icon: NSImage?) -> some View {
+        HStack(spacing: 6) {
+            if let icon {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: 16, height: 16)
+            }
+            Text(name)
+        }
+    }
+
+    /// Icon for an app that is installed but not running (the saved default
+    /// after its app quit) — resolved from the app bundle on disk, since
+    /// there is no NSRunningApplication to ask.
+    private static func installedAppIcon(bundleID: String) -> NSImage? {
+        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else { return nil }
+        return NSWorkspace.shared.icon(forFile: url.path)
     }
 
     /// Writes the display name alongside the bundle ID so the "(not
