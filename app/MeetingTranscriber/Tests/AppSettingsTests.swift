@@ -292,6 +292,17 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertTrue(defaults.bool(forKey: "recordOnly"))
     }
 
+    // MARK: - Record-App Hotkey
+
+    func test_recordAppHotkey_defaultsToFalse() {
+        XCTAssertFalse(settings.recordAppHotkeyEnabled)
+    }
+
+    func test_recordAppHotkey_persistsToUserDefaults() {
+        settings.recordAppHotkeyEnabled = true
+        XCTAssertTrue(defaults.bool(forKey: "recordAppHotkeyEnabled"))
+    }
+
     // MARK: - Verbose Diagnostics (legacy audioDebugLogging migration)
 
     func test_verboseDiagnostics_defaultsToFalse() {

@@ -186,6 +186,15 @@ final class AppSettings {
         didSet { defaults.set(micName, forKey: "micName") }
     }
 
+    // MARK: - Hotkeys
+
+    /// Registers the system-wide ⌃⌥⌘R shortcut that opens the "Record App"
+    /// window from any app (Carbon hot key — no TCC grant needed). Off by
+    /// default so the app never shadows another app's shortcut unasked.
+    var recordAppHotkeyEnabled: Bool {
+        didSet { defaults.set(recordAppHotkeyEnabled, forKey: "recordAppHotkeyEnabled") }
+    }
+
     // MARK: - Transcription
 
     var transcriptionEngine: TranscriptionEngineSetting {
@@ -479,6 +488,7 @@ final class AppSettings {
         perChannelIndicatorEnabled = defaults.object(forKey: "perChannelIndicatorEnabled") as? Bool ?? true
         liveTranscriptionEnabled = defaults.object(forKey: "liveTranscriptionEnabled") as? Bool ?? false
         asymmetricSilenceWarningSeconds = max(30, min(300, defaults.object(forKey: "asymmetricSilenceWarningSeconds") as? Double ?? 90))
+        recordAppHotkeyEnabled = defaults.object(forKey: "recordAppHotkeyEnabled") as? Bool ?? false
 
         transcriptionEngine = (defaults.string(forKey: "transcriptionEngine")
             .flatMap(TranscriptionEngineSetting.init(rawValue:))) ?? .whisperKit

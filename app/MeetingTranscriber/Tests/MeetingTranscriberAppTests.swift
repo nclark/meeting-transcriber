@@ -52,6 +52,37 @@ final class MeetingTranscriberAppTests: XCTestCase {
         XCTAssertNil(result)
     }
 
+    // MARK: - recordAppHotkeyShouldOpen
+
+    func testHotkeyOpensWhenIdle() {
+        XCTAssertTrue(MeetingTranscriberApp.recordAppHotkeyShouldOpen(
+            isManualRecording: false,
+            state: .idle,
+        ))
+    }
+
+    func testHotkeyOpensWhileWatching() {
+        XCTAssertTrue(MeetingTranscriberApp.recordAppHotkeyShouldOpen(
+            isManualRecording: false,
+            state: .watching,
+        ))
+    }
+
+    func testHotkeyBlockedWhileRecording() {
+        // Mirrors the menu bar, which hides "Record App..." mid-recording.
+        XCTAssertFalse(MeetingTranscriberApp.recordAppHotkeyShouldOpen(
+            isManualRecording: false,
+            state: .recording,
+        ))
+    }
+
+    func testHotkeyBlockedDuringManualRecording() {
+        XCTAssertFalse(MeetingTranscriberApp.recordAppHotkeyShouldOpen(
+            isManualRecording: true,
+            state: .idle,
+        ))
+    }
+
     func testLastProtocolPathNoProtocolReturnsNil() {
         let job = PipelineJob(
             meetingTitle: "Test",

@@ -7,6 +7,7 @@ extension Notification.Name {
     static let showSpeakerNaming = Notification.Name("showSpeakerNaming")
     static let showSettings = Notification.Name("showSettings")
     static let closeSettings = Notification.Name("closeSettings")
+    static let showRecordApp = Notification.Name("showRecordApp")
 }
 
 /// Renders the menu-bar icon and ticks the animation frame in its own
@@ -75,6 +76,7 @@ private struct WindowAccessor: NSViewRepresentable {
 struct MeetingTranscriberApp: App {
     @State private var appState = AppState(notifier: NotificationManager.shared)
     @State private var captionsWindow: LiveCaptionsWindowController?
+    @State private var recordAppHotKey: GlobalHotKey?
     @Environment(\.openWindow)
     private var openWindow
 
@@ -153,6 +155,26 @@ struct MeetingTranscriberApp: App {
             }
             .onReceive(NotificationCenter.default.publisher(for: .closeSettings)) { _ in
                 closeWindow(id: "settings")
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .showRecordApp)) { _ in
+                guard Self.recordAppHotkeyShouldOpen(
+                    isManualRecording: appState.isManualRecording,
+                    state: appState.currentStatus?.state ?? .idle,
+                ) else { return }
+                bringWindowToFront(id: "record-app")
+            }
+            .onChange(of: appState.settings.recordAppHotkeyEnabled, initial: true) { _, enabled in
+                if enabled, recordAppHotKey == nil {
+                    recordAppHotKey = GlobalHotKey(
+                        keyCode: GlobalHotKey.recordAppKeyCode,
+                        modifiers: GlobalHotKey.recordAppModifiers,
+                    ) {
+                        NotificationCenter.default.post(name: .showRecordApp, object: nil)
+                    }
+                } else if !enabled {
+                    recordAppHotKey?.unregister()
+                    recordAppHotKey = nil
+                }
             }
             .task {
                 await appState.engines.preloadActiveModel()
@@ -369,5 +391,15 @@ struct MeetingTranscriberApp: App {
     /// Returns the protocol path from the last completed job, if any.
     static func lastCompletedProtocolPath(completedJobs: [PipelineJob]) -> URL? {
         completedJobs.last?.protocolPath
+    }
+
+    /// Whether the global Record-App hotkey should open the picker window.
+    /// Mirrors the menu bar, which hides "Record App..." while a manual
+    /// recording is running or a meeting is being recorded.
+    static func recordAppHotkeyShouldOpen(
+        isManualRecording: Bool,
+        state: TranscriberState,
+    ) -> Bool {
+        !isManualRecording && state != .recording
     }
 }

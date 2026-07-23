@@ -16,6 +16,17 @@ struct GeneralSettingsView: View {
                 }
             }
 
+            Section("Global Hotkey") {
+                Toggle(
+                    "Open \"Record App\" window (\(GlobalHotKey.recordAppDisplayString))",
+                    isOn: $settings.recordAppHotkeyEnabled,
+                )
+                .accessibilityIdentifier(A11yID.recordAppHotkeyToggle)
+                Text("Works system-wide while the app is running. No extra permissions needed.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Apps to Watch") {
                 Toggle("Microsoft Teams", isOn: $settings.watchTeams)
                 Toggle("Zoom", isOn: $settings.watchZoom)

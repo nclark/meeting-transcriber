@@ -70,6 +70,21 @@ final class SettingsInteractionTests: XCTestCase {
         XCTAssertEqual(settings.protocolProvider, .openAICompatible)
     }
 
+    // MARK: - Toggle write-back
+
+    func testRecordAppHotkeyToggleBindsToSetting() throws {
+        let settings = makeSettings()
+        XCTAssertFalse(settings.recordAppHotkeyEnabled, "precondition: hotkey defaults off")
+        let view = GeneralSettingsView(settings: settings, updateChecker: nil)
+
+        let toggle = try view.inspect().find(ViewType.Toggle.self) { toggle in
+            try toggle.accessibilityIdentifier() == A11yID.recordAppHotkeyToggle
+        }
+        try toggle.tap()
+
+        XCTAssertTrue(settings.recordAppHotkeyEnabled, "tapping the toggle must enable the hotkey setting")
+    }
+
     // MARK: - Stepper write-back
 
     func testPollIntervalStepperIncrementsSetting() throws {
