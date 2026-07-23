@@ -17,15 +17,16 @@ struct GeneralSettingsView: View {
             }
 
             Section("Global Hotkey") {
-                Toggle(
-                    "Open \"Record App\" window",
-                    isOn: $settings.recordAppHotkeyEnabled,
-                )
-                .accessibilityIdentifier(A11yID.recordAppHotkeyToggle)
-                if settings.recordAppHotkeyEnabled {
-                    HStack {
+                HStack {
+                    Toggle(
+                        "Open \"Record App\" window",
+                        isOn: $settings.recordAppHotkeyEnabled,
+                    )
+                    .accessibilityIdentifier(A11yID.recordAppHotkeyToggle)
+                    Spacer()
+                    if settings.recordAppHotkeyEnabled {
                         Text("Shortcut")
-                        Spacer()
+                            .foregroundStyle(.secondary)
                         ShortcutRecorderView(combo: $settings.recordAppHotkeyCombo) { armed in
                             settings.hotkeyCaptureActive = armed
                         }
@@ -36,6 +37,8 @@ struct GeneralSettingsView: View {
                         .disabled(settings.recordAppHotkeyCombo == .recordAppDefault)
                         .accessibilityIdentifier(A11yID.recordAppHotkeyReset)
                     }
+                }
+                if settings.recordAppHotkeyEnabled {
                     Text("Must include ⌘, ⌃, or ⌥. Works system-wide while Meeting Transcriber is running.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
